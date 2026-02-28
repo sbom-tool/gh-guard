@@ -50,7 +50,7 @@ For each file in the selected level:
 
 For each file to generate:
 
-1. Read the corresponding template from `chain-guard/templates/`
+1. Read the corresponding template from `gh-guard/templates/`
 2. Replace all `{{PLACEHOLDER}}` values with detected/provided values:
    - `{{CRATE_NAME}}` → detected crate name
    - `{{MSRV}}` → detected MSRV

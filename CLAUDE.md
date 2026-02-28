@@ -1,10 +1,10 @@
-# Chain-Guard: CI/CD Supply Chain Hardening for Rust
+# GH-Guard: CI/CD Supply Chain Hardening for Rust
 
 This is a Claude Code skill plugin that helps Rust OSS maintainers harden their CI/CD supply chain.
 
 ## What This Plugin Does
 
-Chain-Guard provides production-tested templates, guided workflows, and gap analysis for:
+GH-Guard provides production-tested templates, guided workflows, and gap analysis for:
 
 - **Trusted Publishing** — OIDC-based crates.io publishing (no long-lived tokens)
 - **SLSA L3 Provenance** — Verifiable build provenance attached to GitHub Releases

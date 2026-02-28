@@ -99,7 +99,7 @@ Output a structured report with:
 ### Missing Files
 For each missing file, include:
 - What it does
-- Template reference: `chain-guard/templates/<file>`
+- Template reference: `gh-guard/templates/<file>`
 - Generation command: `/generate <target>`
 
 ### Manual Steps Required

@@ -67,7 +67,7 @@ If the output file already exists:
 
 ### Step 4: Generate
 
-1. Read the template from the chain-guard plugin directory
+1. Read the template from the gh-guard plugin directory
 2. Replace all `{{PLACEHOLDER}}` tokens with detected values
 3. Create parent directories if needed (e.g., `.github/workflows/`, `scripts/`)
 4. Write the file

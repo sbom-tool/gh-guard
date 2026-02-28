@@ -1,8 +1,8 @@
-# Chain-Guard
+# GH-Guard
 
 CI/CD supply chain hardening skill plugin for Claude Code, designed for Rust projects.
 
-Chain-Guard packages production-tested CI/CD security configurations into reusable templates and guided workflows. It helps Rust OSS maintainers achieve high OpenSSF Scorecard scores, set up Trusted Publishing, generate SLSA L3 provenance, and configure comprehensive dependency auditing.
+GH-Guard packages production-tested CI/CD security configurations into reusable templates and guided workflows. It helps Rust OSS maintainers achieve high OpenSSF Scorecard scores, set up Trusted Publishing, generate SLSA L3 provenance, and configure comprehensive dependency auditing.
 
 ## Installation
 
@@ -11,7 +11,7 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
 ```json
 {
   "plugins": [
-    "~/github/chain-guard"
+    "~/github/gh-guard"
   ]
 }
 ```
@@ -21,7 +21,7 @@ Or install from a specific path:
 ```json
 {
   "plugins": [
-    "/path/to/chain-guard"
+    "/path/to/gh-guard"
   ]
 }
 ```
