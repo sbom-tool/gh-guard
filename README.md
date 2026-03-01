@@ -1,8 +1,8 @@
 # GH-Guard
 
-CI/CD supply chain hardening skill plugin for Claude Code, designed for Rust projects.
+CI/CD supply chain hardening plugin for [Claude Code](https://claude.com/claude-code), designed for Rust projects.
 
-GH-Guard packages production-tested CI/CD security configurations into reusable templates and guided workflows. It helps Rust OSS maintainers achieve high OpenSSF Scorecard scores, set up Trusted Publishing, generate SLSA L3 provenance, and configure comprehensive dependency auditing.
+GH-Guard packages production-tested CI/CD security configurations into reusable templates and guided workflows. It helps Rust OSS maintainers achieve high [OpenSSF Scorecard](https://scorecard.dev) scores, set up [Trusted Publishing](https://blog.rust-lang.org/2023/11/09/crates-io-trusted-publishing.html), generate [SLSA L3](https://slsa.dev) provenance, and configure comprehensive dependency auditing.
 
 ## Installation
 
@@ -11,17 +11,7 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
 ```json
 {
   "plugins": [
-    "~/github/gh-guard"
-  ]
-}
-```
-
-Or install from a specific path:
-
-```json
-{
-  "plugins": [
-    "/path/to/gh-guard"
+    "~/path/to/gh-guard"
   ]
 }
 ```
@@ -39,6 +29,9 @@ Or install from a specific path:
 /generate ci-workflow
 /generate publish-workflow
 /generate deny-toml
+
+# Check for outdated SHA pins
+/check-updates
 ```
 
 ## Commands
@@ -48,8 +41,10 @@ Or install from a specific path:
 Scans your repository and produces a structured gap analysis:
 - Checks for expected files (workflows, deny.toml, SECURITY.md, etc.)
 - Scores against OpenSSF Scorecard checks
+- Classifies your current hardening level (Minimal / Standard / Hardened)
 - Identifies SHA-pinning gaps, missing permissions, Cargo.lock issues
-- Outputs recommendations with template references
+- Detects workspace projects and validates publish ordering
+- Outputs prioritized recommendations with template references
 
 ### `/harden` — Interactive Wizard
 
@@ -57,13 +52,24 @@ Guides you through hardening at three levels:
 
 | Level | Components |
 |-------|-----------|
-| **Minimal** | CI + cargo-deny + Dependabot + SECURITY.md |
+| **Minimal** | CI workflow + cargo-deny + Dependabot + SECURITY.md |
 | **Standard** | + Trusted Publishing + CodeQL + Scorecard + release script |
-| **Hardened** | + SLSA provenance + fuzz testing + osv-scanner |
+| **Hardened** | + SLSA L3 provenance + fuzz testing + osv-scanner |
+
+Detects your current hardening level and offers upgrade mode — generating only the delta files needed to reach the next level. Supports workspace projects with per-crate Trusted Publishing guidance.
+
+### `/check-updates` — SHA Pin Checker
+
+Checks deployed workflows for outdated action SHAs and CLI tool versions:
+- Compares pinned SHAs against latest tags via the GitHub API
+- Detects outdated CLI tool versions (cargo-audit, cargo-fuzz)
+- Shows what's out of date with current vs latest comparison
+- Offers to apply updates automatically
+- Respects the SLSA generator exception (must use `@tag`, not SHA)
 
 ### `/generate <target>` — File Generator
 
-Generates a single file with auto-detected project values:
+Generates a single file with auto-detected project values. Shows a unified diff before overwriting existing files.
 
 | Target | Output Path |
 |--------|------------|
@@ -79,22 +85,47 @@ Generates a single file with auto-detected project values:
 | `release-script` | `scripts/release.sh` |
 | `osv-scanner` | `osv-scanner.toml` |
 
-## What's Inside
+## Templates
 
-### Templates
+Production-tested config files parameterized with `{{PLACEHOLDER}}` syntax. Values are auto-detected from `Cargo.toml`, git remote, and `cargo metadata`:
 
-Production-tested config files parameterized with `{{PLACEHOLDER}}` syntax. Auto-detection fills in crate name, MSRV, repo owner/name from your project's `Cargo.toml` and git remote.
+| Placeholder | Source | Example |
+|-------------|--------|---------|
+| `{{CRATE_NAME}}` | `Cargo.toml` name field | `my-tool` |
+| `{{MSRV}}` | `rust-version` or `rust-toolchain.toml` | `1.82` |
+| `{{REPO_OWNER}}` | Git remote URL | `my-org` |
+| `{{REPO_NAME}}` | Git remote URL | `my-tool` |
+| `{{CONTACT_EMAIL}}` | `Cargo.toml` authors field | `me@example.com` |
+| `{{FUZZ_TARGETS}}` | `fuzz/Cargo.toml` bin entries | `fuzz_parse,fuzz_decode` |
+| `{{WORKSPACE_CRATES}}` | `cargo metadata --no-deps` (publishable, dependency order) | `core,parser,cli` |
 
-### Skills
+### Security Hardening in Templates
 
-Deep knowledge documents covering:
+All workflow templates follow these security practices:
 
-- **Scorecard Checks** — All 18 OpenSSF checks with Rust-specific implementation guidance
-- **Trusted Publishing** — OIDC setup for crates.io (threat model, prerequisites, step-by-step)
-- **SLSA Provenance** — Three-job publish/provenance/release pipeline architecture
-- **CI Pipeline** — Gate pattern, caching, SHA pinning, permissions
-- **Release Automation** — PR-based flow, signed tags, CI polling
-- **Dependency Policy** — cargo-deny, Dependabot, osv-scanner layered defense
+- **SHA-pinned actions** with version comments (e.g., `# v4.2.2`)
+- **`permissions: read-all`** at workflow level, scoped per-job
+- **`persist-credentials: false`** on all checkout steps
+- **Script injection prevention** — user-controlled values passed via environment variables, not inline `${{ }}`
+- **Concurrency groups** — prevent parallel runs on the same branch/PR
+- **Pinned CLI tool versions** — `cargo-audit` pinned to specific version with `--locked`
+- **`workflow_dispatch` retrigger** — publish workflow supports manual retrigger for failed publishes
+
+## Skills
+
+Skills are deep knowledge documents loaded automatically when relevant. They encode hard-won lessons from production Rust CI/CD:
+
+| Skill | What It Covers |
+|-------|---------------|
+| **scorecard-checks** | All 18 OpenSSF Scorecard checks with Rust-specific implementation guidance and scoring strategy |
+| **trusted-publishing** | OIDC threat model, prerequisites, step-by-step crates.io setup, troubleshooting |
+| **slsa-provenance** | Three-job publish/provenance/release pipeline, hash generation, verification, common pitfalls |
+| **ci-pipeline** | Gate pattern, multi-job design, caching, SHA pinning, permissions model |
+| **release-automation** | PR-based release flow, signed tags, CI polling race condition, branch protection compatibility |
+| **dependency-policy** | cargo-deny configuration, Dependabot setup, osv-scanner layered defense |
+| **fuzz-testing** | cargo-fuzz setup, `Arbitrary` vs raw bytes, corpus management, CI integration, coverage analysis |
+| **migration-guide** | Level detection algorithm, upgrade paths (Minimal to Standard to Hardened), rollback procedures |
+| **workspace-publishing** | Multi-crate publish ordering, per-crate Trusted Publishing, version synchronization |
 
 ## Hardening Targets
 
@@ -110,6 +141,59 @@ Based on real-world experience achieving OpenSSF Scorecard 7.5/10:
 - Fuzz testing with cargo-fuzz
 - Signed git tags (SSH ed25519 or GPG)
 - SECURITY.md with coordinated disclosure policy
+
+## Architecture
+
+```
+gh-guard/
+  commands/           # User-invocable slash commands
+    audit.md          # /audit — gap analysis
+    harden.md         # /harden — interactive wizard
+    generate.md       # /generate — single file generator
+    check-updates.md  # /check-updates — SHA staleness checker
+  skills/             # Contextual knowledge (auto-loaded)
+    ci-pipeline/
+    dependency-policy/
+    fuzz-testing/
+    migration-guide/
+    release-automation/
+    scorecard-checks/
+    slsa-provenance/
+    trusted-publishing/
+    workspace-publishing/
+  templates/          # Parameterized config files
+    workflows/
+      ci.yml
+      codeql.yml
+      fuzz.yml
+      publish.yml
+      scorecard.yml
+    deny.toml
+    dependabot.yml
+    osv-scanner.toml
+    release.sh
+    rust-toolchain.toml
+    SECURITY.md
+    VERSIONS.md       # Pinned action version manifest
+  CLAUDE.md           # Plugin instructions
+```
+
+## Critical Gotchas
+
+Hard-won lessons from production use:
+
+1. **SLSA generator MUST use `@tag` not SHA** — the reusable workflow requires tag references for attestation signing
+2. **Immutable releases** — provenance must be generated BEFORE the GitHub Release (can't upload assets after)
+3. **Tag protection** — wrong tag = new version number (tags can't be deleted or updated)
+4. **`gh pr checks --watch` race** — returns immediately if checks haven't started; poll for check existence first
+5. **`fetch-depth: 0` required** — publish workflows that verify tag ancestry break with shallow clones
+6. **Trusted Publishing configured at crates.io** — not in the repo; visit crates.io/crates/NAME/settings
+7. **osv-scanner.toml doesn't propagate** — child directories need their own copies
+8. **CodeQL default setup conflicts** — disable in repo Settings > Code Security before using a custom workflow
+9. **cargo-audit needs `--locked`** — prevents MSRV issues from transitive dependency upgrades
+10. **cargo-deny v0.19 breaking change** — removed `vulnerability` key; use `"all"` or `"workspace"` for unmaintained/unsound
+11. **Workspace publish ordering** — inter-dependent crates must publish in dependency order with ~60s delay for index propagation
+12. **`workflow_dispatch` retrigger** — use `gh workflow run publish.yml -f tag=vX.Y.Z` instead of `gh run rerun` (which uses the original workflow file)
 
 ## License
 

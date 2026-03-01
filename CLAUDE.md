@@ -27,6 +27,7 @@ GH-Guard provides production-tested templates, guided workflows, and gap analysi
 - `/audit` — Scan your repo and produce a gap analysis against supply chain best practices
 - `/harden` — Interactive wizard to generate missing configs at your chosen hardening level
 - `/generate <target>` — Generate a single config file (e.g., `/generate ci-workflow`)
+- `/check-updates` — Check deployed workflows for outdated SHA pins and CLI tool versions
 
 ## Skills (Contextual Knowledge)
 
@@ -38,6 +39,9 @@ Skills are loaded automatically when relevant. They provide deep knowledge on:
 - `ci-pipeline` — Multi-job CI design patterns for Rust
 - `release-automation` — PR-based release flow with signed tags
 - `dependency-policy` — cargo-deny, Dependabot, and osv-scanner configuration
+- `fuzz-testing` — Coverage-guided fuzz testing with cargo-fuzz, corpus management, and CI integration
+- `migration-guide` — Upgrade paths between hardening levels with detection and rollback
+- `workspace-publishing` — Multi-crate workspace publishing, ordering, and Trusted Publishing
 
 ## Templates
 
@@ -51,6 +55,7 @@ All templates use `{{PLACEHOLDER}}` syntax for project-specific values:
 | `{{REPO_NAME}}` | Git remote URL | `my-tool` |
 | `{{CONTACT_EMAIL}}` | `Cargo.toml` authors field | `me@example.com` |
 | `{{FUZZ_TARGETS}}` | `fuzz/Cargo.toml` or user input | `fuzz_parse,fuzz_decode` |
+| `{{WORKSPACE_CRATES}}` | `cargo metadata --no-deps` filtered by publishable, dependency order | `core,parser,cli` |
 
 ## Critical Gotchas
 
@@ -66,3 +71,5 @@ These are hard-won lessons — pay attention to these:
 8. **CodeQL default setup** — must be disabled in repo Settings > Code Security before using a custom workflow
 9. **cargo-audit needs `--locked`** — `cargo install cargo-audit --locked` to avoid MSRV issues from transitive deps
 10. **cargo-deny v0.19** — removed the `vulnerability` key; use `"all"` or `"workspace"` for unmaintained/unsound checks
+11. **Workspace publish ordering** — inter-dependent crates must be published in dependency order with ~60s delay for crates.io index propagation
+12. **`workflow_dispatch` retrigger** — publish.yml supports manual retrigger via `workflow_dispatch` with a tag input; the `PUBLISH_TAG` env var resolves the tag from either trigger type

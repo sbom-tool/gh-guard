@@ -100,15 +100,27 @@ uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
 ### 13. Code-Review (Behavioral — 0-10/10)
 **What it checks:** PRs are reviewed before merge (looks at recent merge history).
-**Rust action:** Always merge via reviewed PRs. Admin merges that bypass review will lower this score. This is a behavioral change, not a config file.
+**Rust action:** While primarily behavioral, there are concrete steps:
+- Enable "Require PR reviews" in branch protection (1+ approver) — this is in the `/harden` Standard checklist
+- Avoid `--admin` merges (the release script now prompts before using this)
+- For solo maintainers: consider self-review with a 1-hour cool-off period, or use the PR description as a review record
+- Scorecard looks at the last 30 merged PRs — consistent review practice over time raises the score
 
 ### 14. Contributors (Organic — 0-10/10)
 **What it checks:** Multiple contributors from different organizations.
-**Rust action:** No direct action. Score improves organically as the project grows.
+**Rust action:** While primarily organic, you can encourage contributions:
+- Well-written `CONTRIBUTING.md` and "good first issue" labels
+- Dependabot PRs count as contributions (from a different "org")
+- Accept documentation, CI, and test PRs — they all count
+- Score requires contributors from 2+ GitHub orgs over the last 30 commits
 
 ### 15. Maintained (Organic — 0-10/10)
 **What it checks:** Recent commits, issue responses, release activity within 90 days.
-**Rust action:** No direct action. New repos start at 0 and improve over time. Regular commits and issue triage help.
+**Rust action:** Concrete steps to keep the score healthy:
+- Set up Dependabot (from `/harden` Minimal) — automated PRs count as activity
+- Respond to issues within 90 days, even if just to triage/label
+- Make at least one release per quarter (the release script from `/harden` Standard makes this easy)
+- Scorecard checks: commits in last 90 days, issues closed in last 90 days, releases created
 
 ### 16. Packaging (Medium — 10/10)
 **What it checks:** Project publishes packages via CI (not local machine).

@@ -55,15 +55,32 @@ Read project files to fill in placeholders:
 | `{{REPO_NAME}}` | `git remote get-url origin \| sed -E 's|.*[:/][^/]+/([^/]+)(\.git)?$|\1|'` |
 | `{{CONTACT_EMAIL}}` | `sed -nE 's/^authors = \["[^<]*<([^>]+)>.*$/\1/p' Cargo.toml` |
 | `{{FUZZ_TARGETS}}` | Parse `fuzz/Cargo.toml` for `[[bin]] name = "..."` entries |
+| `{{WORKSPACE_CRATES}}` | `cargo metadata --no-deps` filtered by publishable crates, in dependency order (e.g., `core,parser,cli`) |
 
 If a required value can't be detected, ask the user.
 
-### Step 3: Check for Existing File
+### Step 3: Check for Existing File and Show Diff
+
+If the output file does NOT exist, proceed to Step 4.
 
 If the output file already exists:
-1. Show the user the existing file path
-2. Ask: **overwrite / keep existing / show diff**
-3. Never silently overwrite
+
+1. **Generate the new content in memory** — read the template, replace all `{{PLACEHOLDER}}` tokens with detected values (but do not write yet)
+2. **Compare existing vs generated:**
+   - If the files are identical, tell the user: "File already matches the template — no changes needed." Skip to Step 5.
+   - If the files differ, show a **unified diff** in a fenced code block so the user can see exactly what would change:
+     ```diff
+     --- existing .github/workflows/ci.yml
+     +++ generated from template
+     @@ -1,4 +1,4 @@
+     -old line
+     +new line
+     ```
+3. **Ask the user:** **Apply (overwrite with generated)** / **Keep existing** / **Show full generated file**
+   - If "Apply" — proceed to Step 4 (write the generated content)
+   - If "Keep existing" — skip to Step 5
+   - If "Show full generated file" — display the full generated content, then ask again: **Apply / Keep existing**
+4. Never silently overwrite
 
 ### Step 4: Generate
 
@@ -83,7 +100,9 @@ Show target-specific notes:
 **publish-workflow:**
 - Create `crates-io` environment in repo Settings > Environments
 - Configure Trusted Publishing at crates.io/crates/{{CRATE_NAME}}/settings
+- **Workspace:** configure Trusted Publishing for EACH publishable crate separately
 - Ensure Cargo.toml version matches tag before pushing
+- To retrigger a failed publish: `gh workflow run publish.yml -f tag=vX.Y.Z`
 
 **codeql:**
 - Disable "default setup" in repo Settings > Code Security first

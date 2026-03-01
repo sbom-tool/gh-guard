@@ -60,8 +60,7 @@ jobs:
           toolchain: nightly
 
       - name: Cache cargo registry and build
-        # v2
-        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2
         with:
           workspaces: fuzz -> target
           key: fuzz-${{ matrix.target }}
@@ -73,3 +72,12 @@ jobs:
         run: |
           cargo +nightly fuzz run ${{ matrix.target }} -- \
             -max_total_time=120
+
+      - name: Upload crash artifacts
+        # v6.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: failure()
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}/
+          retention-days: 30

@@ -33,6 +33,7 @@ Check for the presence of each file. For each, report: present/missing/partial.
 | CI Pipeline | Gate job | CI workflow with `if: always()` + `needs:` pattern |
 | Publishing | Publish workflow | `.github/workflows/` (triggered by `tags: ["v*"]`) |
 | Publishing | Trusted Publishing | Publish workflow with `crates-io-auth-action` |
+| Publishing | Workspace publish ordering | Publish workflow handles all publishable crates in dependency order (workspace only) |
 | Provenance | SLSA provenance | Publish workflow with `slsa-github-generator` |
 | Provenance | GitHub Release | Publish workflow with `gh release create` |
 | Security | `SECURITY.md` | Root or `.github/` |
@@ -65,6 +66,42 @@ For each workflow found, check:
 - `persist-credentials: false` on checkout steps?
 - `fetch-depth: 0` where ancestry checks are needed?
 - `--locked` flag on cargo commands?
+
+**Workspace (if `[workspace]` in Cargo.toml):**
+- Does the publish workflow handle all publishable members?
+- Are crates published in dependency order with propagation delays?
+- Does the release script bump versions in all publishable `Cargo.toml` files?
+
+### Step 3a: Classify Hardening Level
+
+Using the findings from Step 2, classify the project's current hardening level:
+
+1. **Check Minimal markers** (all required):
+   - CI workflow with `cargo test` present
+   - `deny.toml` exists
+   - `.github/dependabot.yml` exists
+   - `SECURITY.md` exists
+
+2. **Check Standard markers** (all Minimal + all of these):
+   - Publish workflow with `crates-io-auth-action`
+   - CodeQL workflow present
+   - Scorecard workflow present
+   - Release script exists
+
+3. **Check Hardened markers** (all Standard + all of these):
+   - `slsa-github-generator` in publish workflow
+   - Fuzz workflow present
+   - `osv-scanner.toml` exists
+
+4. **Classify:**
+   - All Hardened markers → **Hardened**
+   - All Standard markers → **Standard**
+   - All Minimal markers → **Minimal**
+   - Otherwise → **Custom** — report the highest complete level and list missing markers for the next level up
+
+Use this classification in the report summary (Step 5) and in the "Next Steps" recommendation.
+
+See the `migration-guide` skill for the full detection algorithm and upgrade paths.
 
 ### Step 4: Score Against Scorecard Checks
 

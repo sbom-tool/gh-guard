@@ -65,10 +65,46 @@ fi
 
 echo "==> Releasing {{CRATE_NAME}} v$VERSION"
 
+# ── Detect workspace ────────────────────────────────────────────
+IS_WORKSPACE=false
+PUBLISHABLE_CRATES=()
+if grep -q '^\[workspace\]' Cargo.toml 2>/dev/null; then
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required for workspace support. Install: brew install jq (macOS) or apt-get install jq (Linux)"
+        exit 1
+    fi
+    IS_WORKSPACE=true
+    # Detect publishable workspace members
+    while IFS= read -r crate; do
+        PUBLISHABLE_CRATES+=("$crate")
+    done < <(cargo metadata --no-deps --format-version 1 \
+        | jq -r '.packages[] | select(.publish == null or (.publish | length == 0) or (.publish | index("false") | not)) | .name' \
+        2>/dev/null || true)
+    if [[ ${#PUBLISHABLE_CRATES[@]} -eq 0 ]]; then
+        echo "Error: No publishable crates found in workspace"
+        exit 1
+    fi
+    echo "    Workspace detected with ${#PUBLISHABLE_CRATES[@]} publishable crate(s): ${PUBLISHABLE_CRATES[*]}"
+fi
+
 # ── Check current version ────────────────────────────────────────
 CURRENT="$(sed -nE 's/^version = "([^"]+)"/\1/p' Cargo.toml | head -n1)"
 echo "    Current version: $CURRENT"
 echo "    New version:     $VERSION"
+
+if [[ "$IS_WORKSPACE" == true ]]; then
+    # Verify all publishable members have the same version
+    for crate in "${PUBLISHABLE_CRATES[@]}"; do
+        CRATE_DIR="$(cargo metadata --no-deps --format-version 1 \
+            | jq -r --arg name "$crate" '.packages[] | select(.name == $name) | .manifest_path' \
+            | xargs dirname)"
+        CRATE_VER="$(sed -nE 's/^version = "([^"]+)"/\1/p' "$CRATE_DIR/Cargo.toml" | head -n1)"
+        if [[ "$CRATE_VER" != "$CURRENT" ]]; then
+            echo "Error: Crate '$crate' has version $CRATE_VER but root has $CURRENT"
+            exit 1
+        fi
+    done
+fi
 
 if [[ "$CURRENT" == "$VERSION" ]]; then
     echo "Error: Cargo.toml already at version $VERSION"
@@ -106,10 +142,41 @@ echo "==> Bumping Cargo.toml to $VERSION"
 sed -i.bak "s/^version = \"$CURRENT\"/version = \"$VERSION\"/" Cargo.toml
 rm -f Cargo.toml.bak
 
-# Update Cargo.lock
-cargo check --quiet 2>/dev/null
+if [[ "$IS_WORKSPACE" == true ]]; then
+    # Bump version in all publishable workspace members
+    for crate in "${PUBLISHABLE_CRATES[@]}"; do
+        CRATE_DIR="$(cargo metadata --no-deps --format-version 1 \
+            | jq -r --arg name "$crate" '.packages[] | select(.name == $name) | .manifest_path' \
+            | xargs dirname)"
+        echo "    Bumping $crate ($CRATE_DIR/Cargo.toml)"
+        sed -i.bak "s/^version = \"$CURRENT\"/version = \"$VERSION\"/" "$CRATE_DIR/Cargo.toml"
+        rm -f "$CRATE_DIR/Cargo.toml.bak"
+    done
 
-git add Cargo.toml Cargo.lock
+    # Update inter-crate dependency versions (path deps with version = "=X.Y.Z")
+    while IFS= read -r toml; do
+        if grep -q "version = \"=$CURRENT\"" "$toml" 2>/dev/null; then
+            echo "    Updating inter-crate dep version in $toml"
+            sed -i.bak "s/version = \"=$CURRENT\"/version = \"=$VERSION\"/" "$toml"
+            rm -f "$toml.bak"
+        fi
+    done < <(find . -name Cargo.toml -not -path './target/*')
+fi
+
+# Update Cargo.lock
+if [[ "$IS_WORKSPACE" == true ]]; then
+    cargo check --workspace --quiet 2>/dev/null
+else
+    cargo check --quiet 2>/dev/null
+fi
+
+if [[ "$IS_WORKSPACE" == true ]]; then
+    # Stage all modified Cargo.toml files
+    find . -name Cargo.toml -not -path ./target/\* -exec git add {} +
+    git add Cargo.lock
+else
+    git add Cargo.toml Cargo.lock
+fi
 git commit -m "Bump version to $VERSION"
 git push -u origin "$RELEASE_BRANCH"
 
@@ -144,8 +211,17 @@ fi
 # ── Merge PR ─────────────────────────────────────────────────────
 echo "==> Merging PR #$PR_NUMBER..."
 if ! gh pr merge "$PR_NUMBER" --squash --delete-branch; then
-    echo "    Standard merge failed, trying with --admin..."
-    gh pr merge "$PR_NUMBER" --squash --delete-branch --admin
+    echo ""
+    echo "    Standard merge failed. This usually means branch protection is blocking."
+    echo "    Using --admin bypasses branch protection (required reviews, status checks)."
+    read -rp "    Merge with --admin (bypasses branch protection)? [y/N] " ADMIN_CONFIRM
+    if [[ "$ADMIN_CONFIRM" =~ ^[Yy]$ ]]; then
+        gh pr merge "$PR_NUMBER" --squash --delete-branch --admin
+    else
+        echo "    Aborting. Fix the issue and merge PR #$PR_NUMBER manually."
+        git checkout main
+        exit 1
+    fi
 fi
 
 # ── Update local main ───────────────────────────────────────────

@@ -127,6 +127,17 @@ slsa-verifier verify-artifact my-crate-0.1.5.crate \
 | Missing `contents: write` on provenance | Cannot write attestation | Add to provenance job permissions |
 | Wrong provenance filename | Download artifact step fails | Ensure `provenance-name` matches `download-artifact name:` |
 | Shallow clone for ancestry | `merge-base --is-ancestor` fails | `fetch-depth: 0` on checkout |
+| Failed publish, need retrigger | `gh run rerun` uses old workflow file | Use `workflow_dispatch` with the tag input to retrigger the current workflow |
+
+## Retriggering a Failed Publish
+
+The publish workflow supports `workflow_dispatch` with a `tag` input for manual retrigger. This is safer than `gh run rerun` (which uses the original workflow file, not the current one):
+
+```bash
+gh workflow run publish.yml -f tag=v0.1.5
+```
+
+The `PUBLISH_TAG` env var resolves the tag from either trigger type, so all steps work correctly with both `push` and `workflow_dispatch`.
 
 ## Template
 

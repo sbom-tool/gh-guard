@@ -112,13 +112,20 @@ The release script handles branch protection gracefully:
 
 ```bash
 if ! gh pr merge "$PR_NUMBER" --squash --delete-branch; then
-    echo "Standard merge failed, trying with --admin..."
-    gh pr merge "$PR_NUMBER" --squash --delete-branch --admin
+    echo "Standard merge failed. --admin bypasses branch protection."
+    read -rp "Merge with --admin? [y/N] " ADMIN_CONFIRM
+    if [[ "$ADMIN_CONFIRM" =~ ^[Yy]$ ]]; then
+        gh pr merge "$PR_NUMBER" --squash --delete-branch --admin
+    else
+        echo "Aborting. Fix the issue and merge manually."
+        git checkout main
+        exit 1
+    fi
 fi
 ```
 
 - First tries standard merge (works if CI passes and reviews are satisfied)
-- Falls back to `--admin` merge (bypasses protection — requires admin access)
+- Prompts before `--admin` merge (bypasses protection — requires explicit consent)
 
 **Note:** Admin merges lower the Scorecard Code-Review score. For best scores, have another maintainer review the version bump PR.
 
@@ -130,12 +137,20 @@ If your org or repo has tag protection rules:
 - **Always bump Cargo.toml BEFORE tagging** — The publish workflow verifies the tag matches `Cargo.toml`
 - **Tag must be on main** — The publish workflow verifies the tagged commit is an ancestor of `origin/main`
 
-## `gh run rerun` Gotcha
+## Retriggering a Failed Publish
 
-If a publish workflow fails and you use `gh run rerun`:
-- It re-runs with the **original workflow file** from the commit, not the current one
-- If you fixed a bug in the workflow file, the rerun will use the old buggy version
-- Solution: push a new tag (which means a new version number)
+If a publish workflow fails (e.g., crates.io outage), use `workflow_dispatch` instead of `gh run rerun`:
+
+```bash
+# Preferred: retrigger with current workflow file
+gh workflow run publish.yml -f tag=v0.1.5
+
+# Avoid: gh run rerun uses the ORIGINAL workflow file, not current
+```
+
+**Why not `gh run rerun`:** It re-runs with the **original workflow file** from the commit, not the current one. If you fixed a bug in the workflow file, the rerun will use the old buggy version.
+
+The publish workflow's `PUBLISH_TAG` env var resolves the tag from either trigger type, so all verification steps work correctly with `workflow_dispatch`.
 
 ## Post-Tag Pipeline
 

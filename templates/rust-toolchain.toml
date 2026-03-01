@@ -3,7 +3,17 @@
 #
 # Pin the Rust toolchain to your MSRV. This ensures all contributors
 # and CI use the same version. Update this when bumping MSRV.
+#
+# NOTE: Fuzz testing (cargo-fuzz) requires nightly and is handled
+# separately in the fuzz workflow — this file pins stable/MSRV only.
 
 [toolchain]
 channel = "{{MSRV}}"
+profile = "default"
 components = ["rustfmt", "clippy"]
+
+# Uncomment for coverage reports (cargo-llvm-cov):
+# components = ["rustfmt", "clippy", "llvm-tools-preview"]
+
+# Uncomment to pin specific targets:
+# targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin"]
