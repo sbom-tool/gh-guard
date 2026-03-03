@@ -40,7 +40,7 @@ Check for the presence of each file. For each, report: present/missing/partial.
 | Security | CodeQL workflow | `.github/workflows/` with `codeql-action` |
 | Security | Scorecard workflow | `.github/workflows/` with `scorecard-action` |
 | Dependencies | `deny.toml` | Root |
-| Dependencies | `dependabot.yml` | `.github/dependabot.yml` |
+| Dependencies | `dependabot.yml` OR Renovate config | `.github/dependabot.yml` OR `renovate.json` / `.github/renovate.json` |
 | Dependencies | `osv-scanner.toml` | Root |
 | Toolchain | `rust-toolchain.toml` | Root |
 | Toolchain | `Cargo.lock` | Root (should be committed for binaries/apps) |
@@ -79,7 +79,7 @@ Using the findings from Step 2, classify the project's current hardening level:
 1. **Check Minimal markers** (all required):
    - CI workflow with `cargo test` present
    - `deny.toml` exists
-   - `.github/dependabot.yml` exists
+   - Dependency update tool present: `.github/dependabot.yml` OR `renovate.json` / `.github/renovate.json`
    - `SECURITY.md` exists
 
 2. **Check Standard markers** (all Minimal + all of these):
