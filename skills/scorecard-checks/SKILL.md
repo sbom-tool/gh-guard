@@ -26,7 +26,7 @@ The [OpenSSF Scorecard](https://scorecard.dev) evaluates 18 security checks on a
 | Branch-Protection | GitHub Settings | +1 | Medium |
 | CI-Tests | `.github/workflows/ci.yml` | +1 | Medium |
 | Dependency-Update-Tool | `.github/dependabot.yml` OR `renovate.json` | +1 | Easy |
-| Fuzzing | `.github/workflows/fuzz.yml`, `fuzz/` | +1 | Medium |
+| Fuzzing | `fuzz/` + CI workflow, OR OSS-Fuzz integration | +1 | Medium |
 | SAST | `.github/workflows/codeql.yml` | +1 | Easy |
 | Vulnerabilities | `osv-scanner.toml`, `Cargo.lock` | +1 | Variable |
 | Code-Review | PR review settings | +1 | Behavioral |
@@ -87,6 +87,7 @@ uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 ### 10. Fuzzing (Medium — 10/10)
 **What it checks:** Project uses a fuzzing framework (OSS-Fuzz, ClusterFuzzLite, or CI-integrated fuzzing).
 **Rust action:** Set up `cargo-fuzz` with targets. Use `templates/workflows/fuzz.yml`. Even one target that fuzzes a parser or decoder counts.
+**Alternative:** If the project is already integrated with [OSS-Fuzz](https://github.com/google/oss-fuzz), this check passes automatically — Scorecard queries the `google/oss-fuzz` repository directly. A local CI workflow is redundant in that case and adds no score value.
 
 ### 11. SAST (Easy — 10/10)
 **What it checks:** Static analysis tool runs on PRs (CodeQL, Semgrep, etc.).

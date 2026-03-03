@@ -45,7 +45,7 @@ Check for the presence of each file. For each, report: present/missing/partial.
 | Toolchain | `rust-toolchain.toml` | Root |
 | Toolchain | `Cargo.lock` | Root (should be committed for binaries/apps) |
 | Testing | Fuzz targets | `fuzz/` directory |
-| Testing | Fuzz workflow | `.github/workflows/` with `cargo-fuzz` |
+| Testing | Fuzz workflow OR OSS-Fuzz | `.github/workflows/` with `cargo-fuzz`, OR project listed in `google/oss-fuzz` |
 | Release | Release script | `scripts/release.sh` or similar |
 | License | `LICENSE` | Root |
 
@@ -90,7 +90,7 @@ Using the findings from Step 2, classify the project's current hardening level:
 
 3. **Check Hardened markers** (all Standard + all of these):
    - `slsa-github-generator` in publish workflow
-   - Fuzz workflow present
+   - Fuzz workflow present OR project listed in `google/oss-fuzz` (check via `gh api repos/google/oss-fuzz/contents/projects/<name>`)
    - `osv-scanner.toml` exists
 
 4. **Classify:**
