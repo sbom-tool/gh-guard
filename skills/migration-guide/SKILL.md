@@ -23,35 +23,9 @@ This guide covers upgrading between gh-guard hardening levels (Minimal → Stand
 
 ## Detecting Current Level
 
-Check for marker files and patterns to classify the project:
+Use the `hardening-detection` skill for the full marker list and classification algorithm. It is the single source of truth for level detection, shared by `/audit`, `/harden`, and this guide.
 
-### Minimal Markers
-- CI workflow exists: `.github/workflows/` contains a file with `cargo test`
-- `deny.toml` exists in project root
-- `.github/dependabot.yml` exists
-- `SECURITY.md` exists (root or `.github/`)
-
-### Standard Markers (all Minimal markers plus)
-- Publish workflow uses `crates-io-auth-action` (Trusted Publishing)
-- CodeQL workflow exists (`.github/workflows/` with `codeql-action`)
-- Scorecard workflow exists (`.github/workflows/` with `scorecard-action`)
-- Release script exists (`scripts/release.sh` or similar)
-
-### Hardened Markers (all Standard markers plus)
-- Publish workflow includes `slsa-github-generator` (SLSA provenance)
-- Fuzz workflow exists (`.github/workflows/` with `cargo-fuzz` or `cargo fuzz`)
-- `osv-scanner.toml` exists in project root
-
-### Classification Algorithm
-
-```
-if has ALL Hardened markers → Hardened
-else if has ALL Standard markers → Standard
-else if has ALL Minimal markers → Minimal
-else → Custom (partial) — list which markers are present/missing
-```
-
-A "Custom" classification means the project has some elements from higher levels but is missing foundational pieces. Recommend filling gaps at the current effective level before upgrading.
+In brief: check for marker files across three tiers (Minimal: 4 markers, Standard: +4, Hardened: +3). The effective level is the highest tier where ALL markers are present. "Custom" means partial coverage — recommend filling gaps before upgrading.
 
 ## Minimal → Standard Upgrade
 

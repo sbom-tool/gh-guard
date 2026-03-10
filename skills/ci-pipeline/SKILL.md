@@ -147,7 +147,7 @@ deny:
 
 ```yaml
 - name: Install cargo-audit
-  run: cargo install cargo-audit --version 0.21.2 --locked
+  run: cargo install cargo-audit --version 0.22.1 --locked
 ```
 
 **Gotcha:** Without `--locked`, transitive dependencies (e.g., `smol_str`) may require a newer Rust version than CI provides, causing build failures. Always use `--locked`. Pin `--version` to avoid pulling untested new releases in CI — update intentionally when ready.

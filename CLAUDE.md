@@ -28,6 +28,7 @@ GH-Guard provides production-tested templates, guided workflows, and gap analysi
 - `/harden` — Interactive wizard to generate missing configs at your chosen hardening level
 - `/generate <target>` — Generate a single config file (e.g., `/generate ci-workflow`)
 - `/check-updates` — Check deployed workflows for outdated SHA pins and CLI tool versions
+- `/verify` — Validate generated configs are syntactically correct and internally consistent
 
 ## Skills (Contextual Knowledge)
 
@@ -42,6 +43,11 @@ Skills are loaded automatically when relevant. They provide deep knowledge on:
 - `fuzz-testing` — Coverage-guided fuzz testing with cargo-fuzz, corpus management, and CI integration
 - `migration-guide` — Upgrade paths between hardening levels with detection and rollback
 - `workspace-publishing` — Multi-crate workspace publishing, ordering, and Trusted Publishing
+- `hardening-detection` — Shared level detection algorithm (single source of truth)
+- `cargo-vet` — Supply chain audits for third-party crate reviews
+- `security-findings` — SARIF triage workflow for CodeQL, Scorecard, and cargo-deny findings
+- `binary-releases` — Cross-platform binary distribution via GitHub Releases
+- `changelog` — Automated changelog generation with git-cliff
 
 ## Templates
 
@@ -56,6 +62,18 @@ All templates use `{{PLACEHOLDER}}` syntax for project-specific values:
 | `{{CONTACT_EMAIL}}` | `Cargo.toml` authors field | `me@example.com` |
 | `{{FUZZ_TARGETS}}` | `fuzz/Cargo.toml` or user input | `fuzz_parse,fuzz_decode` |
 | `{{WORKSPACE_CRATES}}` | `cargo metadata --no-deps` filtered by publishable, dependency order | `core,parser,cli` |
+
+## Versioning
+
+GH-Guard follows semantic versioning:
+
+- **Patch** (0.x.Y) — SHA pin updates, typo fixes, skill content updates
+- **Minor** (0.X.0) — New skills, new commands, new templates, non-breaking improvements
+- **Major** (X.0.0) — Breaking template changes, removed commands, restructured skills
+
+Template versions are coupled to the plugin version. When gh-guard bumps to a new minor version, regenerating files with `/generate` may produce different output than the previous version. The `templates/versions.json` file tracks all pinned action SHAs and CLI tool versions.
+
+To validate templates after updating gh-guard: run `tests/validate-templates.sh`.
 
 ## Critical Gotchas
 

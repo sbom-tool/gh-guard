@@ -1,6 +1,6 @@
 {
   "name": "gh-guard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CI/CD supply chain hardening for Rust projects — Trusted Publishing, SLSA provenance, Scorecard, cargo-deny, and more",
   "keywords": [
     "rust",
@@ -10,6 +10,10 @@
     "slsa",
     "scorecard",
     "trusted-publishing",
-    "cargo-deny"
-  ]
+    "cargo-deny",
+    "openssf",
+    "provenance"
+  ],
+  "repository": "https://github.com/gh-guard/gh-guard",
+  "license": "MIT"
 }

@@ -47,15 +47,17 @@ Parse the argument to determine which template to use. If no argument or invalid
 
 Read project files to fill in placeholders:
 
-| Placeholder | Detection Method |
-|-------------|-----------------|
-| `{{CRATE_NAME}}` | `sed -nE 's/^name = "([^"]+)"/\1/p' Cargo.toml \| head -1` |
-| `{{MSRV}}` | `sed -nE 's/^rust-version = "([^"]+)"/\1/p' Cargo.toml \| head -1` or `sed -nE 's/^channel = "([^"]+)"/\1/p' rust-toolchain.toml` |
+| Placeholder | Detection Method (prefer `cargo metadata`, fall back to parsing) |
+|-------------|------------------------------------------------------------------|
+| `{{CRATE_NAME}}` | `cargo metadata --no-deps --format-version=1 \| jq -r '.packages[0].name'` — fallback: `sed -nE 's/^name = "([^"]+)"/\1/p' Cargo.toml \| head -1` |
+| `{{MSRV}}` | `cargo metadata --no-deps --format-version=1 \| jq -r '.packages[0].rust_version // empty'` — fallback: `sed -nE 's/^channel = "([^"]+)"/\1/p' rust-toolchain.toml` |
 | `{{REPO_OWNER}}` | `git remote get-url origin \| sed -E 's|.*[:/]([^/]+)/[^/]+(\.git)?$|\1|'` |
 | `{{REPO_NAME}}` | `git remote get-url origin \| sed -E 's|.*[:/][^/]+/([^/]+)(\.git)?$|\1|'` |
-| `{{CONTACT_EMAIL}}` | `sed -nE 's/^authors = \["[^<]*<([^>]+)>.*$/\1/p' Cargo.toml` |
+| `{{CONTACT_EMAIL}}` | `cargo metadata --no-deps --format-version=1 \| jq -r '.packages[0].authors[0]' \| sed -E 's/.*<([^>]+)>.*/\1/'` — fallback: ask user |
 | `{{FUZZ_TARGETS}}` | Parse `fuzz/Cargo.toml` for `[[bin]] name = "..."` entries |
-| `{{WORKSPACE_CRATES}}` | `cargo metadata --no-deps` filtered by publishable crates, in dependency order (e.g., `core,parser,cli`) |
+| `{{WORKSPACE_CRATES}}` | `cargo metadata --no-deps --format-version=1 \| jq -r '[.packages[] \| select(.publish != false)] \| sort_by(.dependencies) \| .[].name'` — filtered by publishable crates, in dependency order |
+
+**Important:** `cargo metadata` handles workspace inheritance, TOML edge cases, and multi-line fields correctly. Always prefer it over `sed` parsing. Only fall back to `sed` if `cargo metadata` fails (e.g., no `Cargo.toml` or broken manifest).
 
 If a required value can't be detected, ask the user.
 

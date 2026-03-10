@@ -74,34 +74,9 @@ For each workflow found, check:
 
 ### Step 3a: Classify Hardening Level
 
-Using the findings from Step 2, classify the project's current hardening level:
-
-1. **Check Minimal markers** (all required):
-   - CI workflow with `cargo test` present
-   - `deny.toml` exists
-   - Dependency update tool present: `.github/dependabot.yml` OR `renovate.json` / `.github/renovate.json`
-   - `SECURITY.md` exists
-
-2. **Check Standard markers** (all Minimal + all of these):
-   - Publish workflow with `crates-io-auth-action`
-   - CodeQL workflow present
-   - Scorecard workflow present
-   - Release script exists
-
-3. **Check Hardened markers** (all Standard + all of these):
-   - `slsa-github-generator` in publish workflow
-   - Fuzz workflow present OR project listed in `google/oss-fuzz` (check via `gh api repos/google/oss-fuzz/contents/projects/<name>`)
-   - `osv-scanner.toml` exists
-
-4. **Classify:**
-   - All Hardened markers → **Hardened**
-   - All Standard markers → **Standard**
-   - All Minimal markers → **Minimal**
-   - Otherwise → **Custom** — report the highest complete level and list missing markers for the next level up
+Use the detection algorithm from the `hardening-detection` skill to classify the project's level (Minimal / Standard / Hardened / Custom). That skill is the single source of truth for marker definitions and classification rules.
 
 Use this classification in the report summary (Step 5) and in the "Next Steps" recommendation.
-
-See the `migration-guide` skill for the full detection algorithm and upgrade paths.
 
 ### Step 4: Score Against Scorecard Checks
 

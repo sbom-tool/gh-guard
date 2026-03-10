@@ -42,31 +42,13 @@ Ask the user which level they want:
 
 ### Step 2a: Detect Current Hardening Level
 
-Before generating files, determine what the project already has:
+Use the detection algorithm from the `hardening-detection` skill (single source of truth for marker definitions and classification rules) to determine the project's current level.
 
-1. **Check Minimal markers:**
-   - CI workflow: `.github/workflows/` contains a file with `cargo test`
-   - `deny.toml` exists at root
-   - `.github/dependabot.yml` exists
-   - `SECURITY.md` exists (root or `.github/`)
+Show the user: "Your project is currently at **[Level]** (X/Y markers present)"
+- If Custom (partial): show "Your project is at **Minimal** with partial Standard coverage (2/4 markers). Missing: CodeQL workflow, Scorecard workflow."
+- Recommend completing the current effective level's gaps before upgrading, or offer to fill them as part of the upgrade
 
-2. **Check Standard markers** (Minimal plus):
-   - Publish workflow with `crates-io-auth-action` (Trusted Publishing)
-   - CodeQL workflow (file with `codeql-action`)
-   - Scorecard workflow (file with `scorecard-action`)
-   - Release script (`scripts/release.sh`)
-
-3. **Check Hardened markers** (Standard plus):
-   - Publish workflow contains `slsa-github-generator`
-   - Fuzz workflow (file with `cargo-fuzz` or `cargo fuzz`)
-   - `osv-scanner.toml` exists at root
-
-4. **Classify:** Show the user: "Your project is currently at **[Level]** (X/Y markers present)"
-   - The **effective level** is the highest level where ALL markers are present (e.g., if all Minimal markers pass but only 2/4 Standard markers pass → effective level is **Minimal**)
-   - If Custom (partial): show "Your project is at **Minimal** with partial Standard coverage (2/4 markers). Missing: CodeQL workflow, Scorecard workflow."
-   - Recommend completing the current effective level's gaps before upgrading, or offer to fill them as part of the upgrade
-
-5. **Upgrade mode:** If the detected level is below the chosen level:
+**Upgrade mode:** If the detected level is below the chosen level:
    - Show what will be added (delta only, not the full level)
    - Example: "Upgrading from **Minimal** → **Standard**: 4 files to generate"
    - Only iterate over the delta files in subsequent steps

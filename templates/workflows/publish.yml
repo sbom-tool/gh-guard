@@ -30,6 +30,10 @@ on:
 
 permissions: read-all
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 env:
   CARGO_TERM_COLOR: always
   # Resolve the tag name from either trigger type
@@ -166,7 +170,7 @@ jobs:
       #     echo "hashes=$(sha256sum target/package/*.crate | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Authenticate to crates.io
-        uses: rust-lang/crates-io-auth-action@c2f7455177fbf986ee0f82f0932f8290b8769cce # v1
+        uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec # v1
         id: auth
 
       - name: Publish crate
@@ -222,7 +226,7 @@ jobs:
 
       - name: Download SLSA provenance
         # v4
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: {{CRATE_NAME}}.intoto.jsonl
           path: provenance/

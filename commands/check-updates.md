@@ -17,7 +17,7 @@ Check deployed GitHub Actions workflow files for outdated SHA pins by comparing 
 
 ### Step 1: Find Deployed Workflows
 
-Scan `.github/workflows/*.yml` for all `uses:` lines that reference SHA-pinned actions.
+Load `templates/versions.json` from the gh-guard plugin directory as the source of truth for expected versions. Then scan `.github/workflows/*.yml` for all `uses:` lines that reference SHA-pinned actions.
 
 Extract each action reference into a list:
 ```

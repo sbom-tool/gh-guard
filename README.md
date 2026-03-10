@@ -1,5 +1,9 @@
 # GH-Guard
 
+<p align="center">
+  <img src="assets/gh-guard-banner.jpg" alt="GH-Guard: Without vs With — from manual YAML and unpinned actions to production-tested templates, SHA-pinned actions, Trusted Publishing, SLSA L3 provenance, and layered dependency defense" width="700">
+</p>
+
 CI/CD supply chain hardening plugin for [Claude Code](https://claude.com/claude-code), designed for Rust projects.
 
 GH-Guard packages production-tested CI/CD security configurations into reusable templates and guided workflows. It helps Rust OSS maintainers achieve high [OpenSSF Scorecard](https://scorecard.dev) scores, set up [Trusted Publishing](https://blog.rust-lang.org/2023/11/09/crates-io-trusted-publishing.html), generate [SLSA L3](https://slsa.dev) provenance, and configure comprehensive dependency auditing.
@@ -32,6 +36,9 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
 
 # Check for outdated SHA pins
 /check-updates
+
+# Validate generated configs
+/verify
 ```
 
 ## Commands
@@ -66,6 +73,15 @@ Checks deployed workflows for outdated action SHAs and CLI tool versions:
 - Shows what's out of date with current vs latest comparison
 - Offers to apply updates automatically
 - Respects the SLSA generator exception (must use `@tag`, not SHA)
+
+### `/verify` — Post-Generation Validation
+
+Validates that generated configs are syntactically correct, internally consistent, and ready to deploy:
+- YAML/TOML syntax validation
+- SHA pin completeness and version comment presence
+- Cross-file consistency (MSRV, gate job, fuzz targets)
+- `cargo-deny check` dry run (if installed)
+- `release.sh --dry-run` validation
 
 ### `/generate <target>` — File Generator
 
@@ -126,6 +142,11 @@ Skills are deep knowledge documents loaded automatically when relevant. They enc
 | **fuzz-testing** | cargo-fuzz setup, `Arbitrary` vs raw bytes, corpus management, CI integration, coverage analysis |
 | **migration-guide** | Level detection algorithm, upgrade paths (Minimal to Standard to Hardened), rollback procedures |
 | **workspace-publishing** | Multi-crate publish ordering, per-crate Trusted Publishing, version synchronization |
+| **hardening-detection** | Shared level detection algorithm used by `/audit`, `/harden`, and migration-guide |
+| **cargo-vet** | Supply chain audits — human review attestation for third-party crates |
+| **security-findings** | SARIF triage workflow for CodeQL, Scorecard, cargo-deny, and Dependabot findings |
+| **binary-releases** | Cross-platform binary distribution via cargo-dist, cross, or manual CI matrix |
+| **changelog** | Automated changelog generation with git-cliff and conventional commits |
 
 ## Hardening Targets
 
@@ -151,13 +172,19 @@ gh-guard/
     harden.md         # /harden — interactive wizard
     generate.md       # /generate — single file generator
     check-updates.md  # /check-updates — SHA staleness checker
+    verify.md         # /verify — post-generation validation
   skills/             # Contextual knowledge (auto-loaded)
+    binary-releases/
+    cargo-vet/
+    changelog/
     ci-pipeline/
     dependency-policy/
     fuzz-testing/
+    hardening-detection/
     migration-guide/
     release-automation/
     scorecard-checks/
+    security-findings/
     slsa-provenance/
     trusted-publishing/
     workspace-publishing/
@@ -174,8 +201,18 @@ gh-guard/
     release.sh
     rust-toolchain.toml
     SECURITY.md
-    VERSIONS.md       # Pinned action version manifest
+    VERSIONS.md       # Pinned action version manifest (human-readable)
+    versions.json     # Pinned action version manifest (machine-readable)
+  tests/              # Validation infrastructure
+    validate-templates.sh
+    fixtures/
+  examples/           # Sample output
+    audit-output.md
+  .gitignore
   CLAUDE.md           # Plugin instructions
+  LICENSE             # MIT
+  README.md
+  SECURITY.md         # Plugin security policy
 ```
 
 ## Critical Gotchas

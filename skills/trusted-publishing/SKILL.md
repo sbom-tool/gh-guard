@@ -65,7 +65,7 @@ permissions:
 2. **The `crates-io-auth-action`** to exchange the OIDC token:
 ```yaml
 - name: Authenticate to crates.io
-  uses: rust-lang/crates-io-auth-action@c2f7455177fbf986ee0f82f0932f8290b8769cce # v1
+  uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec # v1
   id: auth
 
 - name: Publish crate
@@ -100,6 +100,36 @@ For workspaces publishing multiple crates:
 - Each crate needs its own Trusted Publishing configuration at crates.io
 - All can share the same workflow file and environment
 - Publish in dependency order with `cargo publish -p <crate>` for each
+
+## OIDC Beyond crates.io
+
+The same OIDC pattern used for crates.io Trusted Publishing works for other services:
+
+| Service | OIDC Provider | Use Case |
+|---------|--------------|----------|
+| **AWS** | `aws-actions/configure-aws-credentials` | Deploy to S3, ECR, Lambda |
+| **GCP** | `google-github-actions/auth` | Deploy to Cloud Run, GCS, Artifact Registry |
+| **Azure** | `azure/login` | Deploy to Azure Container Apps, Blob Storage |
+| **PyPI** | Native Trusted Publishing | If your project includes Python bindings (PyO3) |
+| **Private registries** | Varies | Custom OIDC integration or short-lived tokens |
+
+### Pattern
+
+All use the same principle: request a short-lived OIDC token from GitHub, exchange it with the target service, and use the resulting credential for the operation:
+
+```yaml
+permissions:
+  id-token: write  # Required for OIDC token
+  contents: read
+
+steps:
+  - uses: aws-actions/configure-aws-credentials@SHA
+    with:
+      role-to-arn: arn:aws:iam::ACCOUNT:role/deploy-role
+      aws-region: us-east-1
+```
+
+The key requirement is `id-token: write` permission on the job. The service-specific action handles the token exchange.
 
 ## Security Benefits
 

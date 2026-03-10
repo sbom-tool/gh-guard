@@ -13,6 +13,12 @@ allowed-tools:
 
 Multi-crate Rust workspaces require careful publish ordering, per-crate Trusted Publishing configuration, and coordinated version bumps. This skill covers the patterns and gotchas for publishing workspace projects.
 
+## Scope
+
+This skill covers **Cargo workspaces** — projects with `[workspace]` in root `Cargo.toml` where members share a `Cargo.lock` and can have inter-crate dependencies.
+
+**Not covered:** Monorepos with multiple independent `Cargo.toml` files that are NOT connected by `[workspace]`. For those, treat each crate as an independent project and apply the standard (non-workspace) patterns from other gh-guard skills. Each crate gets its own CI, publish workflow, and Trusted Publishing config.
+
 ## Detecting Workspace Projects
 
 A workspace is identified by `[workspace]` in the root `Cargo.toml`:

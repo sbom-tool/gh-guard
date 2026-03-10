@@ -9,6 +9,8 @@ allowed-tools:
   - WebFetch
 ---
 
+> **Last updated:** 2026-03-10 — Scorecard checks evolve; verify against the [latest Scorecard docs](https://github.com/ossf/scorecard/blob/main/docs/checks.md) if scores seem unexpected.
+
 # OpenSSF Scorecard Checks for Rust Projects
 
 The [OpenSSF Scorecard](https://scorecard.dev) evaluates 18 security checks on a 0-10 scale. This skill covers each check with Rust-specific guidance for maximizing your score.

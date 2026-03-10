@@ -1,0 +1,68 @@
+{
+  "last_verified": "2026-03-10",
+  "actions": {
+    "actions/checkout": {
+      "version": "v6.0.2",
+      "sha": "de0fac2e4500dabe0009e67214ff5f5447ce83dd",
+      "templates": ["ci", "codeql", "fuzz", "scorecard", "publish"]
+    },
+    "dtolnay/rust-toolchain": {
+      "version": "master",
+      "sha": "efa25f7f19611383d5b0ccf2d1c8914531636bf9",
+      "templates": ["ci", "fuzz", "publish"]
+    },
+    "Swatinem/rust-cache": {
+      "version": "v2",
+      "sha": "779680da715d629ac1d338a641029a2f4372abb5",
+      "templates": ["ci", "fuzz", "publish"]
+    },
+    "EmbarkStudios/cargo-deny-action": {
+      "version": "v2",
+      "sha": "3fd3802e88374d3fe9159b834c7714ec57d6c979",
+      "templates": ["ci", "publish"]
+    },
+    "github/codeql-action": {
+      "version": "v4",
+      "sha": "0d579ffd059c29b07949a3cce3983f0780820c98",
+      "templates": ["codeql", "scorecard"],
+      "note": "Used as codeql-action/init, codeql-action/analyze, and codeql-action/upload-sarif"
+    },
+    "ossf/scorecard-action": {
+      "version": "v2.4.3",
+      "sha": "4eaacf0543bb3f2c246792bd56e8cdeffafb205a",
+      "templates": ["scorecard"]
+    },
+    "actions/upload-artifact": {
+      "version": "v7.0.0",
+      "sha": "bbbca2ddaa5d8feaa63e36b76fdaad77386f024f",
+      "templates": ["scorecard", "fuzz"]
+    },
+    "actions/download-artifact": {
+      "version": "v4",
+      "sha": "d3f86a106a0bac45b974a628896c90dbdf5c8093",
+      "templates": ["publish"]
+    },
+    "rust-lang/crates-io-auth-action": {
+      "version": "v1",
+      "sha": "b7e9a28eded4986ec6b1fa40eeee8f8f165559ec",
+      "templates": ["publish"]
+    },
+    "slsa-framework/slsa-github-generator": {
+      "version": "v2.1.0",
+      "sha": null,
+      "templates": ["publish"],
+      "note": "Must use @tag reference, not SHA — reusable workflow requirement"
+    }
+  },
+  "cli_tools": {
+    "cargo-audit": {
+      "version": "0.22.1",
+      "template": "ci"
+    },
+    "cargo-fuzz": {
+      "version": "latest",
+      "install_flags": "--locked",
+      "template": "fuzz"
+    }
+  }
+}
