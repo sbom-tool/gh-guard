@@ -10,7 +10,13 @@ GH-Guard packages production-tested CI/CD security configurations into reusable 
 
 ## Installation
 
-Add to your Claude Code settings (`~/.claude/settings.json`):
+**From the Claude Code plugin registry:**
+
+```
+/plugin install gh-guard
+```
+
+**Or manually** — add to your Claude Code settings (`~/.claude/settings.json`):
 
 ```json
 {
@@ -50,6 +56,7 @@ Scans your repository and produces a structured gap analysis:
 - Scores against OpenSSF Scorecard checks
 - Classifies your current hardening level (Minimal / Standard / Hardened)
 - Identifies SHA-pinning gaps, missing permissions, Cargo.lock issues
+- Flags dangerous workflow patterns (`pull_request_target`, `workflow_run` with untrusted input, script injection via PR title/body)
 - Detects workspace projects and validates publish ordering
 - Outputs prioritized recommendations with template references
 
@@ -133,10 +140,10 @@ Skills are deep knowledge documents loaded automatically when relevant. They enc
 
 | Skill | What It Covers |
 |-------|---------------|
-| **scorecard-checks** | All 18 OpenSSF Scorecard checks with Rust-specific implementation guidance and scoring strategy |
+| **scorecard-checks** | All 18 OpenSSF Scorecard checks with Rust-specific guidance, Dangerous-Workflow risk analysis (`pull_request_target` + `workflow_run`), and defense-in-depth recommendations |
 | **trusted-publishing** | OIDC threat model, prerequisites, step-by-step crates.io setup, troubleshooting |
 | **slsa-provenance** | Three-job publish/provenance/release pipeline, hash generation, verification, common pitfalls |
-| **ci-pipeline** | Gate pattern, multi-job design, caching, SHA pinning, permissions model |
+| **ci-pipeline** | Gate pattern, multi-job design, caching, SHA pinning with real-world incident context (Trivy tag hijacking), permissions model |
 | **release-automation** | PR-based release flow, signed tags, CI polling race condition, branch protection compatibility |
 | **dependency-policy** | cargo-deny configuration, Dependabot setup, osv-scanner layered defense |
 | **fuzz-testing** | cargo-fuzz setup, `Arbitrary` vs raw bytes, corpus management, CI integration, coverage analysis |
@@ -144,7 +151,7 @@ Skills are deep knowledge documents loaded automatically when relevant. They enc
 | **workspace-publishing** | Multi-crate publish ordering, per-crate Trusted Publishing, version synchronization |
 | **hardening-detection** | Shared level detection algorithm used by `/audit`, `/harden`, and migration-guide |
 | **cargo-vet** | Supply chain audits — human review attestation for third-party crates |
-| **security-findings** | SARIF triage workflow for CodeQL, Scorecard, cargo-deny, and Dependabot findings |
+| **security-findings** | SARIF triage workflow for CodeQL, Scorecard, cargo-deny, and Dependabot findings + compromised action incident response playbook (Detect/Rotate/Audit/Report) |
 | **binary-releases** | Cross-platform binary distribution via cargo-dist, cross, or manual CI matrix |
 | **changelog** | Automated changelog generation with git-cliff and conventional commits |
 
@@ -231,6 +238,7 @@ Hard-won lessons from production use:
 10. **cargo-deny v0.19 breaking change** — removed `vulnerability` key; use `"all"` or `"workspace"` for unmaintained/unsound
 11. **Workspace publish ordering** — inter-dependent crates must publish in dependency order with ~60s delay for index propagation
 12. **`workflow_dispatch` retrigger** — use `gh workflow run publish.yml -f tag=vX.Y.Z` instead of `gh run rerun` (which uses the original workflow file)
+13. **Tag signatures detect hijacking** — when reviewing action updates, check that tags have GPG/SSH signatures. The Trivy tag hijacking (March 2026) was detectable because force-pushed tags lacked original GPG signatures, had impossible parent-child date relationships, and showed "0 commits to master since this release"
 
 ## License
 

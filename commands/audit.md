@@ -67,6 +67,11 @@ For each workflow found, check:
 - `fetch-depth: 0` where ancestry checks are needed?
 - `--locked` flag on cargo commands?
 
+**Dangerous Workflow Patterns:**
+- Any use of `pull_request_target` trigger? Flag as high risk — this trigger grants write access and secrets to code from forks. The Trivy compromise (March 2026) began with a `pull_request_target` exploit.
+- Any use of `workflow_run` trigger? Check whether it processes untrusted artifacts or uses attacker-controlled values (branch names, PR titles) in `run:` steps.
+- Any use of `${{ github.event.pull_request.title }}` or `${{ github.event.pull_request.body }}` in `run:` steps? Flag as script injection risk.
+
 **Workspace (if `[workspace]` in Cargo.toml):**
 - Does the publish workflow handle all publishable members?
 - Are crates published in dependency order with propagation delays?

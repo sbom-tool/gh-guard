@@ -56,6 +56,17 @@ The [OpenSSF Scorecard](https://scorecard.dev) evaluates 18 security checks on a
 **What it checks:** No `pull_request_target` with checkout of PR code, no `workflow_run` with untrusted input.
 **Rust action:** Use `pull_request` (not `pull_request_target`) for PR workflows. Never pass PR body/title to shell commands.
 
+**`pull_request_target` risks:**
+- Runs with the base branch's secrets and write token, even when processing fork PRs
+- If the workflow checks out the PR head (`actions/checkout` with `ref: ${{ github.event.pull_request.head.sha }}`), attacker-controlled code executes with elevated privileges
+- The Trivy compromise (March 2026) began with a `pull_request_target` exploit that stole a PAT, leading to full repository takeover and tag hijacking of `aquasecurity/trivy-action`
+
+**`workflow_run` risks:**
+- Triggered after another workflow completes — receives that workflow's context
+- If the triggering workflow ran on a fork PR, `workflow_run` can inherit untrusted artifacts or refs
+- Never use `${{ github.event.workflow_run.head_branch }}` or similar attacker-controlled values in shell commands or `run:` steps
+- Validate artifact contents downloaded from the triggering workflow — they may have been produced by fork code
+
 ### 5. Token-Permissions (Medium — 10/10)
 **What it checks:** Workflows declare `permissions` at top level and don't use default broad `GITHUB_TOKEN` permissions.
 **Rust action:** Add `permissions: read-all` at workflow level. Override per-job only where needed (e.g., `contents: write` for releases, `id-token: write` for OIDC).
@@ -68,6 +79,8 @@ The [OpenSSF Scorecard](https://scorecard.dev) evaluates 18 security checks on a
 uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 ```
 **Exception:** SLSA generator MUST use `@tag` (e.g., `@v2.1.0`) — it's a reusable workflow that doesn't support SHA references.
+
+**Defense in depth:** SHA pinning is the primary defense against action compromise (see the Trivy tag hijacking incident in the `ci-pipeline` skill). As a complementary measure, consider runner-level network egress controls (e.g., StepSecurity Harden-Runner) to block unauthorized outbound connections — this would have prevented the Trivy payload from exfiltrating secrets even if an unpinned action had been consumed.
 
 ### 7. Branch-Protection (Medium — 8-10/10)
 **What it checks:** Branch protection rules on default branch.

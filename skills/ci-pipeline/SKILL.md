@@ -66,9 +66,12 @@ uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 ```
 
 **Why SHA not tag:**
-- Tags can be moved (force-pushed) by the action owner
+- Tags can be moved (force-pushed) by the action owner or an attacker with write access
 - SHA is immutable — ensures reproducible builds
 - Scorecard checks for this (Pinned-Dependencies)
+
+**Real-world incident — Trivy tag hijacking (March 2026):**
+Attackers with write access to `aquasecurity/trivy-action` force-pushed 75 of 76 version tags to point to malicious commits. The poisoned `entrypoint.sh` harvested secrets from CI runner process memory and exfiltrated them to a typosquatting C2 domain (`scan.aquasecurtiy[.]org`). Over 10,000 workflow files on GitHub referenced `aquasecurity/trivy-action` by tag. Any pipeline that ran a poisoned tag had all accessible secrets stolen. SHA-pinned workflows were completely unaffected — the immutable commit reference couldn't be redirected. This incident is the single strongest argument for SHA pinning.
 
 **Finding the SHA for a tag:**
 ```bash

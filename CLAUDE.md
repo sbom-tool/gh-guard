@@ -91,3 +91,4 @@ These are hard-won lessons — pay attention to these:
 10. **cargo-deny v0.19** — removed the `vulnerability` key; use `"all"` or `"workspace"` for unmaintained/unsound checks
 11. **Workspace publish ordering** — inter-dependent crates must be published in dependency order with ~60s delay for crates.io index propagation
 12. **`workflow_dispatch` retrigger** — publish.yml supports manual retrigger via `workflow_dispatch` with a tag input; the `PUBLISH_TAG` env var resolves the tag from either trigger type
+13. **Tag signatures detect hijacking** — when reviewing action updates (e.g., Dependabot PRs), check that tags have GPG/SSH signatures. The Trivy tag hijacking (March 2026) was detectable because the force-pushed tags lacked the GPG signatures present on the originals, had impossible parent-child date relationships, and showed "0 commits to master since this release"
